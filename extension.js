@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+import { generateTests } from './generate';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -35,12 +36,27 @@ function activate(context) {
     let write_test_code = vscode.commands.registerCommand('test-code.writeTestCode', function () {
         // get the current file
         let current_file = vscode.window.activeTextEditor.document.fileName;
+        const fileExtension = current_file.split('.').pop().toLowerCase();
+        // Map file extensions to corresponding languages
+        const languageMap = {
+            js: 'JavaScript',
+            py: 'Python',
+            rb: 'Ruby',
+            java: 'Java',
+            cpp: 'C++',
+            css: 'CSS',
+            html: 'HTML',
+            json: 'JSON',
+            txt: 'Plain Text',
+            // Add more mappings as needed
+        };
         // if the current file is test_suite, return
-        if (current_file.endsWith("test_suite.py")) {
+        const testsuiteName = "test_suite" + "." + fileExtension;
+        if (current_file.endsWith(testsuiteName)) {
             return;
         }
         // if test_suite does not exist, create it
-        let test_suite = current_file.substring(0, current_file.lastIndexOf("/")) + "/test_suite.py";
+        let test_suite = current_file.substring(0, current_file.lastIndexOf("/")) + "/" + testsuiteName;
         try {
             if (fs.existsSync(test_suite)) {
                 // file exists
@@ -54,16 +70,7 @@ function activate(context) {
             console.error(err);
         }
 
-        // need to get entire file content, then summarize it into a list of functions and related descriptions. Then
-        // all openAI API with the function name and description as input, ask for test code and output that test code to 
-        // test_suite.py. In the openAI API call, make sure to test the test code with inputs/ouputs that are expected, 
-        // and if it's not the expected output, return the error and get openAI API to try again with the error as an
-        // aditional input
-
-        // get the current file name
-        let current_file_name = current_file.substring(current_file.lastIndexOf("/") + 1, current_file.length);
-        
-        
+        generateTests(current_file, testsuiteName);
         // get the current function name
         
     });
