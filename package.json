@@ -1,0 +1,39 @@
+{
+  "name": "test-code",
+  "displayName": "test_code",
+  "description": "automatically writes test code for existing function descriptions",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.81.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [{
+      "command": "test-code.helloWorld",
+      "title": "Hello VScode"},
+    {
+      "command": "test-code.writeTestCode",
+      "title": "writeTestCode"
+    }]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "node ./test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.81.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "20.2.5",
+    "eslint": "^8.41.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "typescript": "^5.1.3",
+    "@vscode/test-electron": "^2.3.2"
+  }
+}
