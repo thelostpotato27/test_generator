@@ -13,9 +13,6 @@ export function generateTests(current_file, testsuiteName) {
     // and if it's not the expected output, return the error and get openAI API to try again with the error as an
     // aditional input
 
-    // get the current file name
-    let curr_file = current_file.substring(current_file.lastIndexOf("/") + 1, current_file.length);
-
     // get the current file content
     let curr_file_content = vscode.window.activeTextEditor.document.getText();
 
@@ -46,10 +43,10 @@ export function generateTests(current_file, testsuiteName) {
         let curr_func_desc = curr_file_functions[(i*2)+1];
         let error = "";
 
-        let test_output = generateTests(curr_func_name, curr_func_desc, error)[0][0][2][0].split("\n");
+        let test_output = writeTests(curr_func_name, curr_func_desc, error)[0][0][2][0].split("\n");
 
         while (test_output[0] != "test passed") {
-            test_output = generateTests(curr_func_name, curr_func_desc, test_output)[0][0][2][0].split("\n");
+            test_output = writeTests(curr_func_name, curr_func_desc, test_output)[0][0][2][0].split("\n");
         }
 
         fs.writeFile(testsuiteName, test_output, (err) => {
@@ -90,15 +87,15 @@ function createTestPrompt(curr_func_name, curr_func_desc, error) {
     }    
 }
 
-function generateTests(curr_func_name, curr_func_desc, error){
+function writeTests(curr_func_name, curr_func_desc, error){
 
     let test_write = openai.createCompletion({
         model: "gpt-3.5-turbo",
         prompt: createTestPrompt(curr_func_name, curr_func_desc, error),
         temperature: 0.6,
     });
-    test_write = testTests(curr_func_name, curr_func_desc, test_write);
-    return test_write;
+    let output = testTests(curr_func_name, curr_func_desc, test_write);
+    return output;
 }
 
 
