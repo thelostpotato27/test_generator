@@ -5,13 +5,12 @@ const openai = new OpenAIApi(configuration);
 const { exec } = require('child_process');
 const fs = require('fs');
 
-
-export function generateTests(current_file, testsuiteName) {
     // need to get entire file content, then summarize it into a list of functions and related descriptions. Then
-    // all openAI API with the function name and description as input, ask for test code and output that test code to 
-    // test_suite.py. In the openAI API call, make sure to test the test code with inputs/ouputs that are expected, 
-    // and if it's not the expected output, return the error and get openAI API to try again with the error as an
-    // aditional input
+    // call openAI API with the function name and description as input, ask for test code and output that test code to 
+    // test_suite.py. In the openAI API call, make sure the input and outputs are in-line with the function description.
+    // call the openAI API with the input/ouputs generated and function description to check if they match.
+export function generateTests(current_file, testsuiteName) {
+
 
     // get the current file content
     let curr_file_content = vscode.window.activeTextEditor.document.getText();
@@ -33,7 +32,7 @@ export function generateTests(current_file, testsuiteName) {
 
     const funcDesc = openai.createCompletion({
         model: "gpt-3.5-turbo",
-        prompt: extractfunctionPrompt(curr_file_lines),
+        messages: extractfunctionPrompt(curr_file_lines),
         temperature: 0.6,
     });
     const curr_file_functions = funcDesc[0][0][2][0].split("\n");
@@ -59,16 +58,44 @@ export function generateTests(current_file, testsuiteName) {
 }
 
 function extractfunctionPrompt(curr_file_lines) {
-    return ` Below are two examples of the output format
-    Function Name: example_1(temp, temp1)
-    Function Description: takes in two temperatures and returns the average of the two
+    let output = [];
 
-    Function Name: example_2(temp)
-    Function Description: takes in a random variable and returns the max of the variable
-    
-    given the code snippet that follows, output the function name and description for each function. Do not output anything else.
+    const role_desc = {
+        role: "system", 
+        content: "You are a software engineer working on a project. You are tasked with writing descriptions for the functions below."
+    };
 
-    ${curr_file_lines}`;
+    const user1 ={
+        role: "user", 
+        content: "Given a code snippet, output the function name, function description, and an input/output pair. Do not use the function code for the function description, only the comments. Ignore functions that do not have an output. when generating the input/output pair, make sure to have specific examples."
+    };
+
+    const assist1 ={
+        role: "assistant", 
+        content: "Give me an example of the output format"
+    };
+
+    const user2 ={
+        role: "user",
+        content: "here is an example of the output format
+
+        Function Name: example_1(temp, temp1)
+        Function Description: takes in two temperatures and returns the average of the two
+        Input: [temp = 10, temp1 = 16]
+        Output: [13]
+        
+        Function Name: example_2(temp)
+        Function Description: takes in a random variable and returns the max of the variable
+        Input: [temp = 10]
+        Output: [10]"
+    };
+
+    const user3 ={
+        role: "user",
+        content: "The code snippet to be analyzed is below \n ${curr_file_lines}"
+    };
+
+    return output.push(role_desc, user1, assist1, user2, user3);
 }
 
 function createTestPrompt(curr_func_name, curr_func_desc, error) {
